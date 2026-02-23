@@ -26,12 +26,7 @@ Build and deploy automation flows in CVM2 through natural conversation. This Cla
 
 ### 1. Download the skill
 
-**Option A: Clone the repository**
-```bash
-git clone https://github.com/digitata/cvm
-```
-
-**Option B: Download ZIP from [Releases](https://github.com/digitata/cvm/releases)**
+**[Download cvm2-flow-automation.zip](https://github.com/digitata/cvm/releases/download/latest/cvm2-flow-automation.zip)** (latest)
 
 ### 2. Install in Claude Code
 

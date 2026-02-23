@@ -2,8 +2,10 @@ name: Release Skill
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+    paths:
+      - 'skills/**'
 
 jobs:
   release:
@@ -20,8 +22,13 @@ jobs:
           cd skills
           zip -r cvm2-flow-automation.zip cvm2-flow-automation/
 
-      - name: Create Release
+      - name: Update latest release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: latest
+          name: Latest
           files: skills/cvm2-flow-automation.zip
-          generate_release_notes: true
+          body: |
+            Latest skill bundle from main branch.
+
+            Download and install in Claude Code.

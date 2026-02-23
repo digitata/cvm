@@ -77,7 +77,7 @@ Pushing automatically triggers the Plugin Build Service to compile the plugins.
 **Step 4: Wait for Build**
 The following API call shows the status of the build:
 ```bash
-curl -s http://$BASE_URL/plugins/builds/<my-plugins>/<commit>
+curl -H "Authorization: Bearer $TOKEN" -s http://$BASE_URL/plugins/builds/<my-plugins>/<commit>
 ```
 It is suggested to sleep in increments of 15s while waiting for build. Status will be "complete" when it is done. "failed" when error.
 Make sure to use the correct repo name and commit id, else you will get 404.
@@ -85,7 +85,7 @@ Make sure to use the correct repo name and commit id, else you will get 404.
 If an error occurs, the build logs endpoint can be used to diagnose build and code problems:
 
 ```bash
-curl -H "Accept: text/plain" http://$BASE_URL/plugins/builds/<repo>/<commit>/logs
+curl -H "Authorization: Bearer $TOKEN" -H "Accept: text/plain" http://$BASE_URL/plugins/builds/<repo>/<commit>/logs
 ```
 
 **Step 5: Test and Verify**
