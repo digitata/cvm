@@ -111,11 +111,12 @@ curl -X POST "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/nodes" 
     "node_type": "sms.sendSms",
     "label": "Send Notification",
     "config": {
-      "to": "{{phone}}",
-      "message": "Hello {{name}}, your order is ready!"
+      "message": "Hello <%= name %>, your order is ready!"
     }
   }'
 ```
+
+> **Note:** Template syntax varies by plugin. Most use EJS (`<%= variable %>`). Check the node type's description for details.
 
 Save the `node_id` from each response.
 

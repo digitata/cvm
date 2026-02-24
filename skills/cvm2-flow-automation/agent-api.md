@@ -189,11 +189,12 @@ curl -X POST "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/nodes" 
     "node_type": "sms.sendSms",
     "label": "Send SMS",
     "config": {
-      "to": "{{phone}}",
-      "message": "Hello {{name}}"
+      "message": "Hello <%= name %>"
     }
   }'
 ```
+
+> **Note:** Template syntax varies by plugin. Most use EJS (`<%= variable %>`).
 
 **Update an existing node:**
 
@@ -204,7 +205,7 @@ curl -X PATCH "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/nodes/
   -H "Content-Type: application/json" \
   -d '{
     "config": {
-      "message": "Updated message: Hello {{name}}!"
+      "message": "Updated message: Hello <%= name %>!"
     }
   }'
 ```
@@ -218,7 +219,7 @@ curl -X PUT "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/nodes/$N
   -d '{
     "label": "Send SMS",
     "position": { "x": 100, "y": 200 },
-    "config": { "to": "{{phone}}", "message": "Hello" },
+    "config": { "message": "Hello <%= name %>" },
     "meta": {},
     "disabled": false
   }'
@@ -342,7 +343,7 @@ Response:
   "id": "node-abc:version-id",
   "type": "sms.sendSms",
   "label": "Send SMS",
-  "config": { "to": "{{phone}}", "message": "Hello" },
+  "config": { "message": "Hello <%= name %>" },
   "connections": {
     "incoming": [{ "edge_id": "edge-1", "from_node": "node-start" }],
     "outgoing": [{ "edge_id": "edge-2", "to_node": "node-end" }]
