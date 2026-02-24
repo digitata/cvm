@@ -71,27 +71,13 @@ curl -X POST "$BASE_URL/api/v1/agent/start/edit" \
     "flow_id": "existing-flow-uuid",
     "source_version_id": "production",
     "agent_id": "session-001",
-    "reason": "Adding retry logic"
+    "reason": "Adding retry logic",
+    "view_url": "https://example.com/workflow/abc-123/agent-session-001-..."
   }'
 ```
 
 Save the `flow_id` and `version_id` from the response for subsequent API calls.
-
-> **🔗 IMPORTANT: Share the `view_url` with the user!**
->
-> Both `/start/new` and `/start/edit` return a `view_url` field. This is a direct link to the flow editor where the user can watch the flow being built in real-time.
->
-> **Example response:**
-> ```json
-> {
->   "flow_id": "abc-123",
->   "version_id": "agent-session-001-...",
->   "view_url": "https://example.com/workflow/abc-123/agent-session-001-...",
->   "_note": "**Action Required:** Share this link with the user..."
-> }
-> ```
->
-> **Always send the `view_url` to the user immediately after starting a session.** This lets them see your progress as you add nodes and edges.
+Both `/start/new` and `/start/edit` return a `view_url` field. This is a direct link to the flow editor where the user can watch the flow being built in real-time.  Show the `view_url` to the user immediately after starting a session.
 
 ### Step 2: See What Plugins Are Available
 
@@ -193,15 +179,14 @@ curl -X POST "$BASE_URL/api/v1/agent/start/new" \
     "agent_id": "plugin-dev-001",
     "reason": "Creating CRM integration",
     "ttl_minutes": 120,
-    "create_branch": true
+    "create_branch": true,
+    "view_url": "https://example.com/workflow/abc-123/agent-session-001-...",
+
   }'
 ```
 
 Save `flow_id`, `version_id`, and `branch.name` (e.g., `agent/abc-123`) for subsequent steps.
-
-> **🔗 IMPORTANT: Share the `view_url` with the user immediately!**
->
-> The response includes a `view_url` - send this to the user so they can watch your progress in the flow editor.
+The response includes a `view_url` - send this to the user so they can watch your progress in the flow editor.
 
 ### Step 2: Clone the Plugin Repository
 
