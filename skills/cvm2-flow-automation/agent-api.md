@@ -156,11 +156,16 @@ Response:
 
 ### Step 2: Discover Node Types
 
-Get available plugins and their methods:
+Get available plugins and their methods. Use `dev` branch or your session's `branch.name`:
 
 ```bash
-curl "$BASE_URL/api/v1/agent/node-types/$BRANCH" \
+# Use 'dev' for standard plugins, or URL-encode your agent branch
+curl "$BASE_URL/api/v1/agent/node-types/dev" \
   -H "Authorization: Bearer $TOKEN"
+
+# Or with your agent branch (URL-encode slashes):
+# curl "$BASE_URL/api/v1/agent/node-types/agent%2Fabc-123" \
+#   -H "Authorization: Bearer $TOKEN"
 ```
 
 Returns all node types with their settings schemas. Use the `id` field (e.g., `sms.sendSms`) as `node_type` when adding nodes.
@@ -465,7 +470,11 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 Test a plugin method without building a flow:
 
 ```bash
-curl -X POST "$BASE_URL/api/v1/agent/plugins/$BRANCH/sms/sendSms/execute" \
+# IMPORTANT: URL-encode slashes in branch names
+# agent/abc-123 -> agent%2Fabc-123
+ENCODED_BRANCH=$(echo "$BRANCH" | sed 's/\//%2F/g')
+
+curl -X POST "$BASE_URL/api/v1/agent/plugins/$ENCODED_BRANCH/sms/sendSms/execute" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -483,6 +492,9 @@ curl -X POST "$BASE_URL/api/v1/agent/plugins/$BRANCH/sms/sendSms/execute" \
 ```
 
 URL format: `/api/v1/agent/plugins/:branch/:plugin/:method/execute`
+
+> **Note:** Branch names containing `/` must be URL-encoded (replace `/` with `%2F`).
+> Example: `agent/abc-123` → `agent%2Fabc-123`
 
 **Request body fields:**
 - `node_settings` (or `nodeSettings`) — Per-node config, available as `context.config` in plugin
