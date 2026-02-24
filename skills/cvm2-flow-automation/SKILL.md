@@ -36,7 +36,7 @@ The following credentials are required. **If not provided, the agent should ask 
 
 Use this when you want to automate a process using existing plugins.
 
-**Skill Reference:** [Agent API Skill](agent-api.md)
+**More Information:** [Agent API Reference](agent-api.md)
 
 ### Step 1: Start a Session
 
@@ -183,7 +183,7 @@ This creates a "submission" that a human reviewer can accept (promoting to produ
 
 Use this when existing plugins don't do what you need.
 
-**Skill Reference:** [Plugin Service Skill](plugin-service.md)
+**More Information:** [Plugin Service Reference](plugin-service.md)
 
 ### Step 1: Start a Session with a Plugin Branch
 
@@ -353,7 +353,7 @@ Check the status of the item you inserted. Also check the logs for the flow.
 
 ---
 
-## Related Skills
+## Detailed Reference Documentation
 
-- [Agent API Skill](agent-api.md) - All flow building endpoints
-- [Plugin Service Skill](plugin-service.md) - Plugin code specification
+- [Agent API Reference](agent-api.md) - All flow building endpoints
+- [Plugin Service Reference](plugin-service.md) - Plugin code specification
