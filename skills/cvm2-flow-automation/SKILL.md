@@ -217,13 +217,18 @@ git push origin agent/abc-123
 Check build status (wait for status `complete`):
 
 ```bash
-curl -s "$BASE_URL/plugins/builds/my-plugins/$(git rev-parse HEAD)"
+curl -H "Authorization: Bearer $TOKEN" -s "$BASE_URL/plugins/builds/$PLUGINS_REPO/$(git rev-parse HEAD)"
+{
+    ...
+    "status": "pending" | "running" | "complete" | "failed"
+    ...
+}
 ```
 
 If build fails, check logs:
 
 ```bash
-curl -H "Accept: text/plain" "$BASE_URL/plugins/builds/my-plugins/$(git rev-parse HEAD)/logs"
+curl -H "Authorization: Bearer $TOKEN" -H "Accept: text/plain" "$BASE_URL/plugins/builds/$PLUGINS_REPO/$(git rev-parse HEAD)/logs"
 ```
 
 ### Step 5: Test the Plugin
