@@ -75,7 +75,23 @@ curl -X POST "$BASE_URL/api/v1/agent/start/edit" \
   }'
 ```
 
-Save the `flow_id`, `version_id`, and `view_url` from the response. **Share the `view_url` with the user** so they can see the flow being built.
+Save the `flow_id` and `version_id` from the response for subsequent API calls.
+
+> **🔗 IMPORTANT: Share the `view_url` with the user!**
+>
+> Both `/start/new` and `/start/edit` return a `view_url` field. This is a direct link to the flow editor where the user can watch the flow being built in real-time.
+>
+> **Example response:**
+> ```json
+> {
+>   "flow_id": "abc-123",
+>   "version_id": "agent-session-001-...",
+>   "view_url": "https://example.com/workflow/abc-123/agent-session-001-...",
+>   "_note": "**Action Required:** Share this link with the user..."
+> }
+> ```
+>
+> **Always send the `view_url` to the user immediately after starting a session.** This lets them see your progress as you add nodes and edges.
 
 ### Step 2: See What Plugins Are Available
 
@@ -181,7 +197,11 @@ curl -X POST "$BASE_URL/api/v1/agent/start/new" \
   }'
 ```
 
-Save `flow_id`, `version_id`, `view_url`, and `branch.name` (e.g., `agent/abc-123`). **Share the `view_url` with the user.**
+Save `flow_id`, `version_id`, and `branch.name` (e.g., `agent/abc-123`) for subsequent steps.
+
+> **🔗 IMPORTANT: Share the `view_url` with the user immediately!**
+>
+> The response includes a `view_url` - send this to the user so they can watch your progress in the flow editor.
 
 ### Step 2: Clone the Plugin Repository
 
