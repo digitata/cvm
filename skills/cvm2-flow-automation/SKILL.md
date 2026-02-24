@@ -81,14 +81,12 @@ Both `/start/new` and `/start/edit` return a `view_url` field. This is a direct 
 
 ### Step 2: See What Plugins Are Available
 
-Use the `branch.name` from Step 1 (or `dev` as fallback):
-
 ```bash
-# Use the branch from your session (e.g., agent/abc-123)
-# URL-encode slashes: agent/abc-123 -> agent%2Fabc-123
-curl "$BASE_URL/api/v1/agent/node-types/dev" \
+curl "$BASE_URL/api/v1/agent/node-types/$BRANCH_NAME" \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+> **Note:** `BRANCH_NAME` defaults to `dev`. Use your session's `branch.name` for custom plugins (URL-encode slashes: `agent/abc-123` → `agent%2Fabc-123`).
 
 This returns all available node types. Look for the `id` field (e.g., `sms.sendSms`, `http.request`, `pg.sqlExecute`).
 

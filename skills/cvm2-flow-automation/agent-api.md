@@ -156,17 +156,14 @@ Response:
 
 ### Step 2: Discover Node Types
 
-Get available plugins and their methods. Use `dev` branch or your session's `branch.name`:
+Get available plugins and their methods:
 
 ```bash
-# Use 'dev' for standard plugins, or URL-encode your agent branch
-curl "$BASE_URL/api/v1/agent/node-types/dev" \
+curl "$BASE_URL/api/v1/agent/node-types/$BRANCH_NAME" \
   -H "Authorization: Bearer $TOKEN"
-
-# Or with your agent branch (URL-encode slashes):
-# curl "$BASE_URL/api/v1/agent/node-types/agent%2Fabc-123" \
-#   -H "Authorization: Bearer $TOKEN"
 ```
+
+> **Note:** `BRANCH_NAME` defaults to `dev`. Use your session's `branch.name` if you need custom plugins from your agent branch (URL-encode slashes: `agent/abc-123` → `agent%2Fabc-123`).
 
 Returns all node types with their settings schemas. Use the `id` field (e.g., `sms.sendSms`) as `node_type` when adding nodes.
 
