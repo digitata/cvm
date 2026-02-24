@@ -160,6 +160,23 @@ curl "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/logs" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
+### Step 7: Submit for Review
+
+When your flow is ready, commit your work to submit it for human review:
+
+```bash
+curl -X POST "$BASE_URL/api/v1/agent/versions/$VERSION_ID/commit" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Implemented notification flow",
+    "title": "Order Notification System",
+    "description": "Sends SMS when order is ready"
+  }'
+```
+
+This creates a "submission" that a human reviewer can accept (promoting to production) or reject. You can continue making changes and committing until the submission is reviewed.
+
 ---
 
 ## Creating a Custom Plugin
@@ -297,6 +314,23 @@ curl -X POST "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/nodes" 
 ```
 
 Then connect it and run the flow as shown in "Building a Flow" above.
+
+### Step 7: Submit for Review
+
+When your plugin and flow are ready, commit your work:
+
+```bash
+curl -X POST "$BASE_URL/api/v1/agent/versions/$VERSION_ID/commit" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Added CRM integration plugin",
+    "title": "CRM Data Fetch Plugin",
+    "description": "Fetches customer data from external CRM API"
+  }'
+```
+
+A human reviewer will then accept (promoting to production) or reject your submission.
 
 ---
 

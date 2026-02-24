@@ -33,6 +33,7 @@ Agent API Flow Development Checklist
  - [ ] Insert test data
  - [ ] Run and monitor
  - [ ] Inspect results
+ - [ ] Commit & submit for review
 ```
 
 ### Step 1: Start a Session
@@ -348,6 +349,85 @@ Response:
 }
 ```
 
+### Step 7: Commit & Submit for Review
+
+When your flow is ready, commit your work to submit it for human review. This creates a "submission" (similar to a Pull Request) that a human can accept or reject.
+
+**Commit your work:**
+```bash
+curl -X POST "$BASE_URL/api/v1/agent/versions/$VERSION_ID/commit" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Added SMS retry logic with exponential backoff",
+    "title": "SMS Flow with Retry Support",
+    "description": "Implements retry mechanism for failed SMS sends"
+  }'
+```
+
+Response:
+```json
+{
+  "version_id": "agent-claude-session-001-...",
+  "flow_id": "abc-123",
+  "submission": {
+    "id": 42,
+    "status": "pending",
+    "title": "SMS Flow with Retry Support",
+    "created_at": "2026-02-24T10:00:00Z",
+    "updated_at": "2026-02-24T10:00:00Z",
+    "commit_count": 1
+  },
+  "commit": {
+    "id": 15,
+    "message": "Added SMS retry logic with exponential backoff",
+    "committed_at": "2026-02-24T10:00:00Z"
+  },
+  "view_url": "https://example.com/workflow/abc-123/agent-...",
+  "_note": "Your work has been submitted for human review. You may continue editing - subsequent commits will update this submission."
+}
+```
+
+**Key behaviors:**
+- **First commit:** Creates a submission and removes the version TTL (your work is preserved indefinitely)
+- **Subsequent commits:** Updates the existing submission and adds to the commit history
+- **Cannot commit** to already accepted or rejected submissions
+
+**Request fields:**
+- `message` (optional) — Commit message describing what changed
+- `title` (optional) — Submission title (only used on first commit)
+- `description` (optional) — Detailed description of the submission
+
+## SDLC Workflow
+
+The Agent API follows an SDLC-style workflow where agent work goes through human review before reaching production:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      FLOWS UI                                │
+├─────────────────┬───────────────────┬───────────────────────┤
+│   Production    │  Work in Progress │     Submissions       │
+│                 │      (WIP)        │       (PRs)           │
+├─────────────────┼───────────────────┼───────────────────────┤
+│ Promoted        │ Active agent      │ Committed versions    │
+│ versions        │ sessions          │ awaiting human review │
+│ (is_production) │ (no submission)   │ (has submission)      │
+└─────────────────┴───────────────────┴───────────────────────┘
+
+Agent workflow:    active ──commit──> submitted ──[human accept]──> production
+                                          │
+                                    [human reject]
+                                          ↓
+                                      rejected (hidden)
+```
+
+### Submission Lifecycle
+
+1. **Agent commits work** → Submission created with `status: pending`
+2. **Human reviews** via web UI at `/submissions`
+3. **Accept** → Version promoted to production, submission marked `accepted`
+4. **Reject** → Submission marked `rejected`, hidden from agent view
+
 ## Plugin Development Workflow
 
 When creating custom plugins for a flow, you MUST use the dedicated agent branch.
@@ -450,3 +530,5 @@ Both snake_case and camelCase are accepted for all fields.
 | Execute plugin | POST | `/plugins/:branch/:plugin/:method/execute` |
 | **Version Management** | | |
 | Extend TTL | POST | `/versions/:versionId/extend` |
+| **Commit & Submit** | | |
+| Commit work | POST | `/versions/:versionId/commit` (body: `message`, `title`, `description`) |

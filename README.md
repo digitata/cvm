@@ -125,6 +125,13 @@ This skill combines two CVM2 capabilities:
 - Build flows by adding and connecting nodes
 - Execute flows and monitor results
 - Test individual plugin methods
+- Submit work for human review before production
+
+**SDLC Workflow** — Human-in-the-loop review process:
+- Agent commits work when ready
+- Human reviews submissions in the web UI
+- Accept promotes to production, reject provides feedback
+- Full audit trail of commits and reviews
 
 **Plugin Service** — Custom code deployment:
 - Write plugins in JavaScript/TypeScript
