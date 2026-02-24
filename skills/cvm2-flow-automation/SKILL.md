@@ -40,8 +40,9 @@ Use this when you want to automate a process using existing plugins.
 
 ### Step 1: Start a Session
 
+**Create a NEW flow:**
 ```bash
-curl -X POST "$BASE_URL/api/v1/agent/start" \
+curl -X POST "$BASE_URL/api/v1/agent/start/new" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -52,7 +53,29 @@ curl -X POST "$BASE_URL/api/v1/agent/start" \
   }'
 ```
 
-Save the `flow_id` and `version_id` from the response.
+**Or EDIT an existing flow:**
+```bash
+# First, find the flow you want to edit
+curl "$BASE_URL/api/v1/agent/flows?search=notification" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get details and see available versions
+curl "$BASE_URL/api/v1/agent/flows/$FLOW_ID" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Fork from a version to edit
+curl -X POST "$BASE_URL/api/v1/agent/start/edit" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flow_id": "existing-flow-uuid",
+    "source_version_id": "production",
+    "agent_id": "session-001",
+    "reason": "Adding retry logic"
+  }'
+```
+
+Save the `flow_id`, `version_id`, and `view_url` from the response. **Share the `view_url` with the user** so they can see the flow being built.
 
 ### Step 2: See What Plugins Are Available
 
@@ -146,7 +169,7 @@ Use this when existing plugins don't do what you need.
 ### Step 1: Start a Session with a Plugin Branch
 
 ```bash
-curl -X POST "$BASE_URL/api/v1/agent/start" \
+curl -X POST "$BASE_URL/api/v1/agent/start/new" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -158,7 +181,7 @@ curl -X POST "$BASE_URL/api/v1/agent/start" \
   }'
 ```
 
-Save `flow_id`, `version_id`, and `branch.name` (e.g., `agent/abc-123`).
+Save `flow_id`, `version_id`, `view_url`, and `branch.name` (e.g., `agent/abc-123`). **Share the `view_url` with the user.**
 
 ### Step 2: Clone the Plugin Repository
 

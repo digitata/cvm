@@ -27,7 +27,7 @@ Authorization: Bearer <api_key>
 
 ```
 Agent API Flow Development Checklist
- - [ ] Start a session
+ - [ ] Start a session (new or edit existing)
  - [ ] Discover available node types
  - [ ] Build the flow (nodes + edges)
  - [ ] Insert test data
@@ -37,10 +37,14 @@ Agent API Flow Development Checklist
 
 ### Step 1: Start a Session
 
-Creates a flow, agent version, and dedicated plugin branch in one call:
+There are two ways to start a session:
+
+#### Option A: Create a NEW Flow
+
+Creates a new empty flow, agent version, and dedicated plugin branch:
 
 ```bash
-curl -X POST "$BASE_URL/api/v1/agent/start" \
+curl -X POST "$BASE_URL/api/v1/agent/start/new" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -57,20 +61,97 @@ Response:
 {
   "flow_id": "abc-123",
   "version_id": "agent-claude-session-001-...",
+  "view_url": "https://example.com/workflow/abc-123/agent-claude-session-001-...",
   "branch": {
     "name": "agent/abc-123",
     "source": "dev"
-  }
+  },
+  "_note": "**Action Required:** Share this link with the user...\n- **View URL:** https://..."
 }
 ```
 
+#### Option B: EDIT an Existing Flow
+
+First, discover existing flows:
+
+```bash
+# Search for flows
+curl "$BASE_URL/api/v1/agent/flows?search=sms&limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Response includes version_summary for each flow:
+{
+  "flows": [{
+    "flow_id": "abc-123",
+    "name": "SMS Campaign",
+    "version_summary": { "total": 3, "production": true, "active_agent_sessions": 0 }
+  }],
+  "total": 42, "limit": 10, "offset": 0
+}
+```
+
+Get flow details with all versions:
+
+```bash
+curl "$BASE_URL/api/v1/agent/flows/$FLOW_ID" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Response shows all versions with node/edge counts:
+{
+  "flow_id": "abc-123",
+  "name": "SMS Campaign",
+  "versions": [
+    { "version_id": "production", "is_production": true, "node_count": 5, "edge_count": 4 },
+    { "version_id": "agent-xyz-...", "version_type": "agent", "node_count": 6, "edge_count": 5 }
+  ],
+  "active_agent_sessions": 1
+}
+```
+
+Fork from a version to edit:
+
+```bash
+curl -X POST "$BASE_URL/api/v1/agent/start/edit" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flow_id": "abc-123",
+    "source_version_id": "production",
+    "agent_id": "claude-session-001",
+    "reason": "Adding retry logic to SMS node",
+    "ttl_minutes": 60
+  }'
+```
+
+Response:
+```json
+{
+  "flow_id": "abc-123",
+  "flow_name": "SMS Campaign",
+  "version_id": "agent-claude-session-001-...",
+  "source_version_id": "production",
+  "view_url": "https://example.com/workflow/abc-123/agent-claude-session-001-...",
+  "forked_structure": {
+    "node_count": 5,
+    "edge_count": 4,
+    "nodes_copied": ["ingress", "sms.sendSms", "wait", "junction", "end"]
+  },
+  "flow_summary": { "has_production_version": true, "active_agent_sessions": 1 },
+  "_note": "**Forked from:** `production`\n**Action Required:** Share this link..."
+}
+```
+
+#### Response Fields
+
 **Important fields:**
 - `flow_id`, `version_id` - Use in subsequent API calls
+- `view_url` - **Share this with the user** so they can see the flow being built
 - `branch.name` - **CRITICAL**: Use this branch for plugin development (see Plugin Development below)
-- `branch.source` - The base branch (determined by `plugin_service_branch` system setting, typically `dev`)
+- `_note` - Markdown-formatted instructions for the agent
 
-**Optional parameter:**
+**Optional parameters for `/start/new`:**
 - `source_branch` - Override the source branch (e.g., `"source_branch": "master"`)
+- `create_branch` - Set to `false` to skip plugin branch creation
 
 ### Step 2: Discover Node Types
 
@@ -334,8 +415,15 @@ Both snake_case and camelCase are accepted for all fields.
 
 | Action | Method | Endpoint |
 |--------|--------|----------|
-| Start session | POST | `/start` |
+| **Session Management** | | |
+| Create new flow | POST | `/start/new` |
+| Edit existing flow | POST | `/start/edit` (body: `flow_id`, `source_version_id`, `agent_id`) |
+| **Flow Discovery** | | |
+| Search/list flows | GET | `/flows?search=&tags=&limit=&offset=` |
+| Get flow with versions | GET | `/flows/:flowId` |
+| **Node Types** | | |
 | List node types | GET | `/node-types/:branch` |
+| **Flow Building** | | |
 | Add node | POST | `/flows/:flowId/versions/:versionId/nodes` |
 | Get node | GET | `/flows/:flowId/versions/:versionId/nodes/:nodeId` |
 | Update node (partial) | PATCH | `/flows/:flowId/versions/:versionId/nodes/:nodeId` |
@@ -347,14 +435,18 @@ Both snake_case and camelCase are accepted for all fields.
 | Delete edge | DELETE | `/flows/:flowId/versions/:versionId/edges/:edgeId` |
 | Validate | GET | `/flows/:flowId/versions/:versionId/validate` |
 | Get structure | GET | `/flows/:flowId/versions/:versionId/structure` |
+| **Execution** | | |
 | Insert item | POST | `/flows/:flowId/versions/:versionId/insert` (body: `node_id`, `payload`) |
 | Run flow | POST | `/flows/:flowId/versions/:versionId/run` |
 | Tick once | POST | `/flows/:flowId/versions/:versionId/tick` (body: optional `node_id`) |
 | Stop flow | POST | `/flows/:flowId/versions/:versionId/stop` |
+| **Monitoring** | | |
 | Get status | GET | `/flows/:flowId/versions/:versionId/status` |
 | Get logs | GET | `/flows/:flowId/versions/:versionId/logs` |
 | Node items | GET | `/flows/:flowId/versions/:versionId/nodes/:nodeId/items` |
 | Get work item | GET | `/work-items/:workId` |
 | Get trace | GET | `/work-items/:workId/trace` |
+| **Plugin Testing** | | |
 | Execute plugin | POST | `/plugins/:branch/:plugin/:method/execute` |
+| **Version Management** | | |
 | Extend TTL | POST | `/versions/:versionId/extend` |
