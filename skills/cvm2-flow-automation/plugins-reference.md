@@ -6,9 +6,18 @@ This file provides guidance to Agents when working with code in the plugin repos
 
 ## Architecture Overview
 
-This is a **vaitomcvm plugin system** that creates bundled ES modules compatible with Deno runtime from Node.js and TypeScript-based plugins. The system transforms Node.js dependencies into Deno-compatible bundles.
+This is a **vaitomcvm plugin system** that creates bundled ES modules compatible with the node.js processing engine and TypeScript-based plugins.
 
 ## Creating a new plugin
+
+TO get started with the required boilerplate for creating a new plugin: 
+
+```bash
+./cvm2.sh create plugin --name myintegration
+Created files:
+  my-plugin/package.json
+  my-plugin/plugin-my-plugin.mjs
+```
 
 
 ## Extending a plugin
