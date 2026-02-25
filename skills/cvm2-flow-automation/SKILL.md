@@ -221,37 +221,53 @@ Use the `branch.name` from Step 1.
 
 ### Step 3: Write Your Plugin
 
-Create `plugins/plugin-myintegration/index.js`:
+Use the CLI to create a new plugin with the correct structure:
+
+```bash
+./cvm2.sh create plugin --name myintegration
+```
+
+This creates `myintegration/plugin-myintegration.mjs` with the correct boilerplate. Edit it to add your methods:
 
 ```javascript
-module.exports = {
-  name: 'myintegration',
-  version: '1.0.0',
+export const name = "myintegration";
+export const namespace = "myintegration";
+export const version = "1.0.0";
+export const description = "My integration plugin";
 
-  methods: {
-    fetchData: {
-      name: 'Fetch Data',
-      description: 'Get data from external API',
-
-      nodeSettings: {
-        apiKey: { type: 'string', required: true },
-        endpoint: { type: 'string', required: true }
-      },
-
-      inputs: {
-        recordId: { type: 'string' }
-      },
-
-      async execute(context, inputs) {
-        const response = await fetch(
-          `${context.config.endpoint}/${inputs.recordId}`,
-          { headers: { 'Authorization': context.config.apiKey } }
-        );
-        return { data: await response.json() };
-      }
+export const methods = {
+  fetchData: {
+    name: "Fetch Data",
+    description: "Get data from external API",
+    inputs: {
+      recordId: { type: "string", description: "Record ID to fetch" }
+    },
+    outputs: {
+      data: { type: "object", description: "Fetched data" }
+    },
+    nodeSettings: {
+      apiKey: { description: "API key", required: true },
+      endpoint: { description: "API endpoint URL", required: true }
     }
   }
 };
+
+export async function init(ctx) {
+  ctx.logger.info("Initializing myintegration plugin");
+}
+
+export async function close(ctx) {
+  ctx.logger.info("Closing myintegration plugin");
+}
+
+export async function fetchData(ctx, node, input) {
+  const { apiKey, endpoint } = node.config;
+  const response = await fetch(
+    `${endpoint}/${input.recordId}`,
+    { headers: { "Authorization": apiKey } }
+  );
+  return { data: await response.json() };
+}
 ```
 
 ### Step 4: Push and Wait for Build
