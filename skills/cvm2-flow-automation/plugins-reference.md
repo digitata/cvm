@@ -8,6 +8,14 @@ This file provides guidance to Agents when working with code in the plugin repos
 
 This is a **vaitomcvm plugin system** that creates bundled ES modules compatible with Deno runtime from Node.js and TypeScript-based plugins. The system transforms Node.js dependencies into Deno-compatible bundles.
 
+## Creating a new plugin
+
+
+## Extending a plugin
+
+Simply change the plugin-*.mjs file with your new method / changes.
+
+
 ## Language Support
 
 ### TypeScript and JavaScript

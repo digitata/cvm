@@ -221,10 +221,13 @@ Use the `branch.name` from Step 1.
 
 ### Step 3: Write Your Plugin
 
-Use the CLI to create a new plugin with the correct structure:
+Use the CLI to create a new plugin with the correct bootstrapped structure:
 
 ```bash
 ./cvm2.sh create plugin --name myintegration
+Created files:
+  my-plugin/package.json
+  my-plugin/plugin-my-plugin.mjs
 ```
 
 This creates `myintegration/plugin-myintegration.mjs` with the correct boilerplate. Edit it to add your methods:
