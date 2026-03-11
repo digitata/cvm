@@ -14,6 +14,7 @@ This guide walks you through building automation flows and extending them with c
 1. **Build flows** using existing plugins (SMS, HTTP, Database, etc.)
 2. **Create custom plugins** when you need new functionality
 3. **Test everything** before deploying to production
+4. **Organise flows with tags** — set, update, and filter by structured tags via the API
 
 ## Before Starting
 

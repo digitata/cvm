@@ -30,6 +30,7 @@ Agent API Flow Development Checklist
  - [ ] Start a session (new or edit existing)
  - [ ] Discover available node types
  - [ ] Build the flow (nodes + edges)
+ - [ ] Set flow tags and description (optional, via PATCH /flows/:flowId)
  - [ ] Insert test data
  - [ ] Run and monitor
  - [ ] Inspect results
@@ -227,6 +228,47 @@ curl -X PUT "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/nodes/$N
 PUT replaces the entire node — omitted fields are reset to defaults.
 
 The `$NODE_ID` can be the short form (`node-abc`) or full form (`node-abc:version-id`).
+
+### Managing Flow Metadata & Tags
+
+You can update a flow's name, description, and tags at any time using PATCH:
+
+```bash
+curl -X PATCH "$BASE_URL/api/v1/agent/flows/$FLOW_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Flow Name",
+    "description": "New description",
+    "tags": ["sms", "campaign", "retry"]
+  }'
+```
+
+**All fields are optional** — only fields you provide are updated.
+
+**Tag behaviour:**
+- Pass `"tags": ["name1", "name2"]` to **set** the flow's tags (replaces existing)
+- Pass `"tags": []` to **clear** all tags
+- **Omit** the tags field entirely to **leave tags unchanged**
+- Tags are referenced by **name** (e.g. `"sms"`, `"campaign"`) — unknown names are silently ignored
+- Tags must exist in the system's tag catalogue; they cannot be created via this API
+
+**When reading flows** (list or get), tags are returned as structured objects:
+```json
+{
+  "tags": [
+    { "id": 1, "name": "sms", "color": "#3b82f6" },
+    { "id": 7, "name": "campaign", "color": "#10b981" }
+  ]
+}
+```
+
+**Filter flows by tag when listing:**
+```bash
+# Returns flows that have ALL specified tags (AND logic)
+curl "$BASE_URL/api/v1/agent/flows?tags=sms&tags=campaign&limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
 **Connect nodes with an edge:**
 ```bash
@@ -511,6 +553,8 @@ Both snake_case and camelCase are accepted for all fields.
 | **Flow Discovery** | | |
 | Search/list flows | GET | `/flows?search=&tags=&limit=&offset=` |
 | Get flow with versions | GET | `/flows/:flowId` |
+| **Flow Metadata** | | |
+| Update name/description/tags | PATCH | `/flows/:flowId` (body: `name`, `description`, `tags`) |
 | **Node Types** | | |
 | List node types | GET | `/node-types/:branch` |
 | **Flow Building** | | |
