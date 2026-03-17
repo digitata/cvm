@@ -30,7 +30,6 @@ Agent API Flow Development Checklist
  - [ ] Start a session (new or edit existing)
  - [ ] Discover available node types
  - [ ] Build the flow (nodes + edges)
- - [ ] Set flow tags and description (optional, via PATCH /flows/:flowId)
  - [ ] Insert test data
  - [ ] Run and monitor
  - [ ] Inspect results
@@ -229,47 +228,6 @@ PUT replaces the entire node — omitted fields are reset to defaults.
 
 The `$NODE_ID` can be the short form (`node-abc`) or full form (`node-abc:version-id`).
 
-### Managing Flow Metadata & Tags
-
-You can update a flow's name, description, and tags at any time using PATCH:
-
-```bash
-curl -X PATCH "$BASE_URL/api/v1/agent/flows/$FLOW_ID" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Updated Flow Name",
-    "description": "New description",
-    "tags": ["sms", "campaign", "retry"]
-  }'
-```
-
-**All fields are optional** — only fields you provide are updated.
-
-**Tag behaviour:**
-- Pass `"tags": ["name1", "name2"]` to **set** the flow's tags (replaces existing)
-- Pass `"tags": []` to **clear** all tags
-- **Omit** the tags field entirely to **leave tags unchanged**
-- Tags are referenced by **name** (e.g. `"sms"`, `"campaign"`) — unknown names are silently ignored
-- Tags must exist in the system's tag catalogue; they cannot be created via this API
-
-**When reading flows** (list or get), tags are returned as structured objects:
-```json
-{
-  "tags": [
-    { "id": 1, "name": "sms", "color": "#3b82f6" },
-    { "id": 7, "name": "campaign", "color": "#10b981" }
-  ]
-}
-```
-
-**Filter flows by tag when listing:**
-```bash
-# Returns flows that have ALL specified tags (AND logic)
-curl "$BASE_URL/api/v1/agent/flows?tags=sms&tags=campaign&limit=10" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
 **Connect nodes with an edge:**
 ```bash
 curl -X POST "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/edges" \
@@ -286,6 +244,137 @@ curl -X POST "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/edges" 
 curl "$BASE_URL/api/v1/agent/flows/$FLOW_ID/versions/$VERSION_ID/validate" \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+### Managing Campaigns
+
+Campaigns attach a flow to an operational context — giving it a name, description, schedule, and status lifecycle. Use campaigns when you want to track *which flow runs when and why*, rather than just building the flow itself.
+
+#### List / search campaigns
+
+```bash
+# All campaigns (paginated)
+curl "$BASE_URL/api/v1/agent/campaigns?limit=20&offset=0" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Search by name or description
+curl "$BASE_URL/api/v1/agent/campaigns?search=sms&limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Filter by status (draft | ready | running | paused | completed)
+curl "$BASE_URL/api/v1/agent/campaigns?status=ready" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Response:
+```json
+{
+  "campaigns": [
+    {
+      "uuid": "cmp-abc-123",
+      "name": "Weekly SMS Blast",
+      "description": "Sends a weekly SMS to active subscribers",
+      "status": "draft",
+      "flow_id": "flow-uuid-here",
+      "tags": [{ "id": 3, "name": "sms" }],
+      "schedule": null,
+      "created_at": "2026-03-17T04:00:00.000Z",
+      "updated_at": "2026-03-17T04:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+#### Get a single campaign
+
+```bash
+curl "$BASE_URL/api/v1/agent/campaigns/$CAMPAIGN_UUID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+#### Create a campaign
+
+```bash
+curl -X POST "$BASE_URL/api/v1/agent/campaigns" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Weekly SMS Blast",
+    "description": "Sends a weekly SMS to active subscribers",
+    "flow_id": "flow-uuid-here",
+    "tags": ["sms", "weekly"],
+    "schedule": {
+      "mode": "weekday-weekend",
+      "timezone": "Africa/Johannesburg",
+      "config": {
+        "weekdayWeekend": {
+          "weekdayEnabled": true,
+          "weekdayStart": "08:00",
+          "weekdayEnd": "17:00",
+          "saturdayEnabled": false,
+          "saturdayStart": "09:00",
+          "saturdayEnd": "13:00",
+          "sundayEnabled": false,
+          "sundayStart": "09:00",
+          "sundayEnd": "13:00"
+        }
+      }
+    }
+  }'
+```
+
+**Required fields:**
+- `name` — display name (max 64 chars)
+- `flow_id` — UUID of the flow to attach (must exist)
+
+**Optional fields:**
+- `description` — free-text (max 256 chars)
+- `tags` — array of tag name strings; auto-created if not in the catalogue
+- `schedule` — `CampaignSchedule` object (see below); omit for always-on
+
+New campaigns are always created with `status: "draft"`.
+
+#### Update a campaign (PATCH)
+
+All fields are optional — only supplied fields are updated:
+
+```bash
+curl -X PATCH "$BASE_URL/api/v1/agent/campaigns/$CAMPAIGN_UUID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Renamed Campaign",
+    "status": "ready",
+    "tags": ["sms", "campaign"],
+    "schedule": null
+  }'
+```
+
+**Patchable fields:**
+- `name`, `description` — update metadata
+- `flow_id` — re-attach to a different flow (must exist)
+- `status` — `draft` | `ready` | `running` | `paused` | `completed`
+- `tags` — replaces all tags; `[]` clears all; omit to leave unchanged
+- `schedule` — new schedule object, or `null` to remove the schedule
+
+#### Campaign Schedule Format
+
+```json
+{
+  "mode": "24/7",
+  "timezone": "Africa/Johannesburg",
+  "config": {}
+}
+```
+
+Supported modes:
+- `"24/7"` — always allowed (simplest; `config` can be empty `{}`)
+- `"weekday-weekend"` — different windows for weekdays, Saturday, Sunday
+- `"per-day"` — individual on/off + time window for each day of the week
+
+---
 
 ### Step 4: Insert Test Data
 
@@ -550,11 +639,14 @@ Both snake_case and camelCase are accepted for all fields.
 | **Session Management** | | |
 | Create new flow | POST | `/start/new` |
 | Edit existing flow | POST | `/start/edit` (body: `flow_id`, `source_version_id`, `agent_id`) |
+| **Campaign Management** | | |
+| List / search campaigns | GET | `/campaigns?search=&status=&limit=&offset=` |
+| Get campaign | GET | `/campaigns/:uuid` |
+| Create campaign | POST | `/campaigns` (body: `name`, `flow_id`, `description?`, `tags?`, `schedule?`) |
+| Update campaign | PATCH | `/campaigns/:uuid` (body: any of `name`, `description`, `flow_id`, `status`, `tags`, `schedule`) |
 | **Flow Discovery** | | |
 | Search/list flows | GET | `/flows?search=&tags=&limit=&offset=` |
 | Get flow with versions | GET | `/flows/:flowId` |
-| **Flow Metadata** | | |
-| Update name/description/tags | PATCH | `/flows/:flowId` (body: `name`, `description`, `tags`) |
 | **Node Types** | | |
 | List node types | GET | `/node-types/:branch` |
 | **Flow Building** | | |

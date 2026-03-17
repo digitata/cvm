@@ -15,6 +15,7 @@ This guide walks you through building automation flows and extending them with c
 2. **Create custom plugins** when you need new functionality
 3. **Test everything** before deploying to production
 4. **Organise flows with tags** — set, update, and filter by structured tags via the API
+5. **Manage campaigns** — create and configure campaigns that wrap a flow with a name, description, schedule, and status lifecycle
 
 ## Before Starting
 
@@ -354,6 +355,36 @@ curl -X POST "$BASE_URL/api/v1/agent/versions/$VERSION_ID/commit" \
 ```
 
 A human reviewer will then accept (promoting to production) or reject your submission.
+
+---
+
+## Setting Up a Campaign
+
+Once a flow is built and committed, you can wrap it in a campaign to track its operational lifecycle.
+
+```bash
+# 1. Create the campaign (flow must already exist)
+curl -X POST "$BASE_URL/api/v1/agent/campaigns" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Weekly SMS Blast",
+    "description": "Sends weekly SMS to active subscribers",
+    "flow_id": "<flow-uuid>",
+    "tags": ["sms", "weekly"],
+    "schedule": { "mode": "24/7", "config": {} }
+  }'
+
+# 2. Mark it ready when verified
+curl -X PATCH "$BASE_URL/api/v1/agent/campaigns/$CAMPAIGN_UUID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "status": "ready" }'
+```
+
+**Campaign status lifecycle:** `draft` → `ready` → `running` → `paused` / `completed`
+
+For full campaign API details see [Agent API Reference](agent-api.md#managing-campaigns).
 
 ---
 
